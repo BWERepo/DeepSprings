@@ -1,11 +1,12 @@
 # Deep Springs Discount Fabrics — Project Status
 
-Last updated: 2026-07-15 (end of session, first session on this project). This session
-built the entire site from scratch, set up git + a Hostinger FTP deploy pipeline, and
-deployed it live. Everything described below is committed and pushed as of commit
-`582bd8b` (check `git log` for anything newer if picking this up cold). The live site is
-currently **not reachable over HTTPS** due to a Hostinger-side SSL provisioning issue —
-see "Known follow-ups" below; this is not a bug in the code or deploy.
+Last updated: 2026-07-15 (end of second session on this project, same day as the first).
+This session was a quick checkpoint: bumped the version and redeployed with no
+functional changes to the site itself. Everything described below is committed and
+pushed as of commit `fc40c8c` (check `git log` for anything newer if picking this up
+cold). The live site is currently **not reachable over HTTPS** due to a Hostinger-side
+SSL provisioning issue — see "Known follow-ups" below; this is not a bug in the code or
+deploy.
 
 ## What this is
 
@@ -73,7 +74,27 @@ copied over, not invented).
   line this session to compress a 3MB customer-provided PNG down to a 336KB JPEG — not
   wired into any build step, just a one-off optimization.
 
-## This session's work (2026-07-15, first session)
+## Session 2 (2026-07-15, second session, same day as session 1)
+
+This was a bare version-bump-and-redeploy checkpoint — no code or content changes were
+made to the site. Started from a clean working tree (session 1's work was already
+committed and pushed).
+
+1. Bumped `package.json`/`package-lock.json` version `0.1.1` → `0.1.2`.
+2. Ran `npm run build` (succeeds cleanly, including the `fix-static-images.mjs`
+   postbuild step from session 1) then `bash deploy/ftp-deploy.sh` — deploy succeeded,
+   final FTP listing showed all expected files uploaded.
+3. Committed (`fc40c8c`, "Bump version to 0.1.2 and redeploy") and pushed to `main`.
+4. A `/doctor` health-check was also run this session against the global Claude Code
+   setup (not this repo) — it proposed disabling an unused `ui-ux-pro-max` plugin,
+   setting auto permission mode as default, and running `claude update`. The user
+   interrupted before any of those were applied, so **none of those changes are live**;
+   they're unrelated to this project and don't need to be resumed as part of this repo's
+   work.
+5. HTTPS was not re-checked this session — assume it's still broken (see "Known
+   follow-ups") until someone verifies otherwise in a browser.
+
+## Session 1 (2026-07-15, first session)
 
 1. **Built the entire site from scratch** against the `deepsprings-revive.lovable.app`
    reference: `src/app/page.tsx` (Home), `src/app/about/page.tsx`, `src/app/sales/page.tsx`,
