@@ -1,12 +1,13 @@
 # Deep Springs Discount Fabrics — Project Status
 
-Last updated: 2026-07-15 (end of second session on this project, same day as the first).
-This session was a quick checkpoint: bumped the version and redeployed with no
-functional changes to the site itself. Everything described below is committed and
-pushed as of commit `fc40c8c` (check `git log` for anything newer if picking this up
-cold). The live site is currently **not reachable over HTTPS** due to a Hostinger-side
-SSL provisioning issue — see "Known follow-ups" below; this is not a bug in the code or
-deploy.
+Last updated: 2026-07-15 (end of third session on this project, same day as the first
+two). This session added a `/BWEDeepSpringsCheckpoint` skill for future sessions and
+confirmed session 2's checkpoint had actually completed despite an interrupted
+background-task notification — no code or content changes to the site itself.
+Everything described below is committed and pushed as of this doc's own commit (check
+`git log` for anything newer if picking this up cold). The live site is currently **not
+reachable over HTTPS** due to a Hostinger-side SSL provisioning issue — see "Known
+follow-ups" below; this is not a bug in the code or deploy.
 
 ## What this is
 
@@ -73,6 +74,48 @@ copied over, not invented).
 - `sharp` (already a transitive Next.js dependency) was used ad hoc from the command
   line this session to compress a 3MB customer-provided PNG down to a 336KB JPEG — not
   wired into any build step, just a one-off optimization.
+
+## Session 3 (2026-07-15, third session, same day as sessions 1–2)
+
+No code or content changes to the site this session — purely tooling/process work
+around how future sessions checkpoint and deploy this project.
+
+1. **Created a `/BWEDeepSpringsCheckpoint` skill**
+   (`C:\Users\Admin\.claude\skills\BWEDeepSpringsCheckpoint\SKILL.md`) — bundles version
+   bump + `npm run build` + `bash deploy/ftp-deploy.sh` + commit + push into one command,
+   matching the pattern of sibling projects' checkpoint skills but **without** a
+   test-suite gate (this project has no automated tests, unlike CarShow/SAM/HDBS — don't
+   add one to the skill without the user asking for actual test infrastructure first).
+   This file lives outside this repo, in the global Claude Code skills directory.
+2. **Discovered and fixed skill-list staleness**: the user's Claude Code client's
+   slash-command picker was showing stale entries (e.g. `BWECheckpoint`, `BWETest`) that
+   no longer exist anywhere on disk, and wasn't showing newly-created DeepSprings skills
+   even after an app restart. Root cause turned out to be two-fold:
+   - `Z:\Backup\Websites\Claude` is a separate git repo (`BWERepo/ClaudeConfig`) that's
+     the version-controlled source of truth for all shared skills, but it had drifted
+     significantly out of sync with the live `C:\Users\Admin\.claude\skills\` runtime
+     folder (renames, deletions, and ~13 untracked new skills across multiple projects,
+     none of which originated in this session). Fixed by mirroring
+     `C:\Users\Admin\.claude\skills\` onto that repo's `.claude/skills/` via
+     `robocopy /MIR`, then committing and pushing (commit `34a1a7e` in that other repo —
+     not this one). This is a **one-time backlog sync**, not something that needs
+     repeating routinely; future skill edits should be made in both places or synced
+     promptly to avoid drifting again.
+   - Even after that sync, the picker UI still didn't show the DeepSprings skills after
+     a restart — turned out to need a **full app quit-and-reopen**, not just a window
+     reload/restart, to actually re-scan the skills directory. Once that happened,
+     `/BWEDeepSpringsCheckpoint` worked correctly (confirmed live, see next item).
+3. **Confirmed session 2's checkpoint had already fully completed.** A background-task
+   notification arrived mid-session reporting an interrupted/stopped shell command from
+   the *previous* session with no completion record, which raised the question of
+   whether the version-0.1.2 checkpoint (commit `fc40c8c`) had actually finished. Checked
+   directly rather than assuming either way: `git status` was clean, `fc40c8c` and
+   `9356d13` were both already on `origin/main`, and — most importantly — the live server
+   was re-verified via FTP download-and-diff against the local `out/` build, confirming
+   byte-for-byte that v0.1.2 really is what's deployed. **No further action was needed**;
+   this was a verification step, not a fix.
+4. HTTPS was not re-checked this session — assume it's still broken (see "Known
+   follow-ups") until someone verifies otherwise in a browser.
 
 ## Session 2 (2026-07-15, second session, same day as session 1)
 
