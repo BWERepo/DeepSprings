@@ -44,8 +44,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# deploy secrets
-deploy/.ftp-credentials
-
 # raw source assets not needed in the built site (optimized copies live in public/images)
 /Images/

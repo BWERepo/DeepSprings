@@ -57,28 +57,23 @@ copied over, not invented).
     `html_handling: "auto-trailing-slash"` (matches `next.config.ts`'s
     `trailingSlash: true` — `/about` 307-redirects to `/about/`, which 200s).
   - No bindings (KV/D1/R2/etc.) — this is a pure static-assets Worker, no Worker script.
-- **Hostinger is now retired for this project** (per explicit user decision this
-  session — "replace Hostinger entirely" over "keep both in parallel"). The old FTP
-  pipeline (`deploy/ftp-deploy.sh`, `deploy/.ftp-credentials`) is left in the repo,
-  clearly marked deprecated in the script's header comment, for reference/rollback only
-  — it still works against the Hostinger account if ever needed again, but is not run as
-  part of normal deploys anymore. The corresponding "always deploy to Hostinger"
-  standing preference in Claude's memory
-  (`C:\Users\Admin\.claude\projects\Z--Backup-Websites-DeepSprings\memory\feedback_always_deploy.md`)
-  was updated this session to point at `npm run deploy` (Cloudflare) instead.
-  - The Hostinger FTP-host gotcha from session 1 (must use the server's IP, not the
-    domain) and the leftover `default.php` placeholder on that server are now moot for
-    day-to-day work, but kept below for historical reference in case anyone needs to
-    fall back to Hostinger.
-    - `FTP_HOST` must be the server's actual IP (from hPanel → Hosting → Overview) —
-      NOT the domain name, since `businesswebexpress.com`'s DNS may point at a
-      different Hostinger account's server than the one this FTP account lives on.
-    - A leftover `default.php` placeholder file (pre-dating this project) was still
-      sitting on the Hostinger server root as of session 1 — harmless, never cleaned up.
+- **Hostinger is fully removed from this project as of session 5** (per explicit user
+  decision — first "replace Hostinger entirely" over "keep both in parallel" in session
+  4, then an explicit follow-up request to delete the dead code entirely rather than
+  keep it around deprecated). `deploy/ftp-deploy.sh`, `deploy/.ftp-credentials`, and
+  `deploy/.ftp-credentials.example` were deleted outright (the now-empty `deploy/`
+  directory is gone too) — there is no FTP fallback path anymore. If Hostinger hosting
+  is ever needed again, it would need to be rebuilt from scratch (or recovered from git
+  history prior to the session 5 deletion commit) — see session 1's write-up below for
+  the FTP-host gotcha and other Hostinger-specific details, kept there as historical
+  record only, not as a live procedure.
+  - The corresponding "always deploy to Hostinger" standing preference in Claude's
+    memory
+    (`C:\Users\Admin\.claude\projects\Z--Backup-Websites-DeepSprings\memory\feedback_always_deploy.md`)
+    was updated in session 4 to point at `npm run deploy` (Cloudflare) instead.
   - **HTTPS is no longer an open issue** — the Hostinger-side SSL/TLS handshake failure
     that blocked the site for over a week (sessions 1–3) is irrelevant now that
-    Cloudflare terminates TLS. Do not spend time investigating it further unless the
-    project moves back to Hostinger.
+    Cloudflare terminates TLS.
 
 ## Tech stack
 
@@ -90,6 +85,28 @@ copied over, not invented).
   line this session to compress a 3MB customer-provided PNG down to a 336KB JPEG — not
   wired into any build step, just a one-off optimization.
 - `wrangler` (devDependency, `^4.114.0`) — Cloudflare's CLI, used for `npm run deploy`.
+
+## Session 5 (2026-07-23, fifth session, same day as session 4)
+
+A `/BWEDeepSpringsCheckpoint` run, plus a follow-up explicit request to fully delete the
+now-dead Hostinger code rather than leave it deprecated-but-present (session 4 had kept
+it "for rollback reference"). No site content/design changes.
+
+1. Bumped `package.json`/`package-lock.json` version `0.1.2` → `0.1.3`.
+2. Ran `npm run deploy` (`next build` + `fix-static-images.mjs` + `wrangler deploy`) —
+   succeeded, uploaded 31 changed/new assets, custom domain route confirmed still
+   attached.
+3. **Deleted `deploy/ftp-deploy.sh`, `deploy/.ftp-credentials`, and
+   `deploy/.ftp-credentials.example` outright** (the `deploy/` directory no longer
+   exists) — per an explicit mid-session request to eliminate all Hostinger
+   references/code from the project, not just mark them deprecated. Also removed the
+   now-dangling `deploy/.ftp-credentials` line from `.gitignore`.
+   - **Explicitly scoped down**: the user was asked whether to also scrub Hostinger
+     mentions from this doc's session 1–4 history, and chose to leave that historical
+     narrative intact — only the operational code/config was deleted. So "Hostinger"
+     still appears throughout sessions 1–4 below and in the "Repo & deploy" section
+     above; that's intentional, not an oversight, and shouldn't be "cleaned up" further
+     without asking again.
 
 ## Session 4 (2026-07-23, fourth session)
 
