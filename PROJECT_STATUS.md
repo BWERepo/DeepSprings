@@ -1,11 +1,12 @@
 # Deep Springs Discount Fabrics — Project Status
 
-Last updated: 2026-07-23 (end of fourth session on this project). **This session moved
-the live site off Hostinger entirely and onto Cloudflare Workers** — the HTTPS issue
-that blocked Hostinger for over a week is gone; the site is now reachable at
-`https://deepsprings.businesswebexpress.com` with working TLS. Everything described
-below is committed and pushed as of this doc's own commit (check `git log` for anything
-newer if picking this up cold).
+Last updated: 2026-07-23 (end of sixth session on this project, all same day). The
+headline event across sessions 4–6 was **moving the live site off Hostinger entirely
+and onto Cloudflare Workers** — the HTTPS issue that blocked Hostinger for over a week
+is gone; the site is now reachable at `https://deepsprings.businesswebexpress.com` with
+working TLS. Session 6 itself was just a routine version-bump checkpoint (`0.1.3` →
+`0.1.4`), no code changes. Everything described below is committed and pushed as of
+commit `bf26ff4` (check `git log` for anything newer if picking this up cold).
 
 ## What this is
 
@@ -85,6 +86,31 @@ copied over, not invented).
   line this session to compress a 3MB customer-provided PNG down to a 336KB JPEG — not
   wired into any build step, just a one-off optimization.
 - `wrangler` (devDependency, `^4.114.0`) — Cloudflare's CLI, used for `npm run deploy`.
+
+## Session 6 (2026-07-23, sixth session, same day as sessions 4–5)
+
+A bare `/BWEDeepSpringsCheckpoint` run — version bump and redeploy only, no code or
+content changes.
+
+1. Bumped `package.json`/`package-lock.json` version `0.1.3` → `0.1.4`.
+2. Ran `npm run deploy` — succeeded, uploaded 30 changed/new assets, custom domain
+   route confirmed still attached.
+3. Committed (`bf26ff4`, "Checkpoint v0.1.4") and pushed to `main`.
+4. Also fixed the `/BWEDeepSpringsCheckpoint` and `/BWEDeepSpringsEnd` skill files
+   themselves (`C:\Users\Admin\.claude\skills\BWEDeepSpringsCheckpoint\SKILL.md`, and
+   this skill) earlier in session 5 — their instructions still referenced the deleted
+   Hostinger FTP script. If a future session sees a checkpoint/end skill giving
+   FTP-flavored instructions again, that's a sign the skill files (or the tracked copy
+   in `Z:\Backup\Websites\Claude`, a separate git repo — `BWERepo/ClaudeConfig`) have
+   drifted out of sync again; re-sync via `robocopy /MIR` from
+   `C:\Users\Admin\.claude\skills` as was done in session 3.
+5. **Not part of this repo, but worth knowing if picking this project up cold**: a
+   global sound-notification hook (two `[console]::Beep(...)` calls via PowerShell, on
+   the `Notification` and `Stop` Claude Code events) was added to
+   `C:\Users\Admin\.claude\settings.json` earlier the same day, at the user's request.
+   It's a machine-wide preference, not scoped to this project, and has nothing to do
+   with the site's code — mentioned here only for continuity in case its presence (or
+   absence, if it doesn't survive a Claude Code update) is ever confusing.
 
 ## Session 5 (2026-07-23, fifth session, same day as session 4)
 
