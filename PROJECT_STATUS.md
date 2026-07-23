@@ -1,21 +1,19 @@
 # Deep Springs Discount Fabrics — Project Status
 
-Last updated: 2026-07-15 (end of third session on this project, same day as the first
-two). This session added a `/BWEDeepSpringsCheckpoint` skill for future sessions and
-confirmed session 2's checkpoint had actually completed despite an interrupted
-background-task notification — no code or content changes to the site itself.
-Everything described below is committed and pushed as of this doc's own commit (check
-`git log` for anything newer if picking this up cold). The live site is currently **not
-reachable over HTTPS** due to a Hostinger-side SSL provisioning issue — see "Known
-follow-ups" below; this is not a bug in the code or deploy.
+Last updated: 2026-07-23 (end of fourth session on this project). **This session moved
+the live site off Hostinger entirely and onto Cloudflare Workers** — the HTTPS issue
+that blocked Hostinger for over a week is gone; the site is now reachable at
+`https://deepsprings.businesswebexpress.com` with working TLS. Everything described
+below is committed and pushed as of this doc's own commit (check `git log` for anything
+newer if picking this up cold).
 
 ## What this is
 
 A marketing site for Deep Springs Discount Fabrics, a real quilting/crafting fabric shop
 in Dandridge, TN (786 Haynes Road). It's a from-scratch **Next.js 16.2.10 (App Router)**
 site, statically exported (`output: "export"`) and deployed as plain HTML/CSS/JS to
-Hostinger shared hosting over FTP — there is no Node.js server at runtime, everything is
-pre-rendered at build time.
+**Cloudflare Workers (static assets)** — there is no Node.js server at runtime,
+everything is pre-rendered at build time and served directly by Cloudflare's edge.
 
 **Important:** `AGENTS.md` in this repo flags that this Next.js version has breaking
 changes from what a model's training data would assume — check
@@ -42,28 +40,45 @@ copied over, not invented).
     `git merge origin/main --allow-unrelated-histories -X ours` (favoring local content
     on any conflict) rather than a force-push, so that stale scaffold history is still
     reachable in the repo, just superseded.
-- **Live site**: `https://deepsprings.businesswebexpress.com` (a subdomain under the
-  `businesswebexpress.com` Hostinger account, but on its **own separate FTP
-  account/hosting slot** — see the SSL gotcha below).
-- **Deploy**: `npm run build` (runs `next build` then
-  `node scripts/fix-static-images.mjs`, see gotcha below) produces `out/`, then
-  `bash deploy/ftp-deploy.sh` uploads `out/`'s contents over FTPS via `curl`.
-  - Credentials live in `deploy/.ftp-credentials` (gitignored — copy
-    `deploy/.ftp-credentials.example` and fill in the real password to reproduce).
-  - **Gotcha discovered this session**: `FTP_HOST` must be the server's actual IP
-    (from hPanel → Hosting → Overview) — NOT the domain name. The domain
-    `businesswebexpress.com`'s DNS points at whichever Hostinger account owns *that*
-    domain, not necessarily the server actually hosting this FTP account, so
-    `ftp://businesswebexpress.com` or `ftp://ftp.businesswebexpress.com` both
-    fail/misconnect. The FTP account's home directory is already scoped to this site's
-    `public_html/deepsprings.businesswebexpress.com` folder, so uploads land at the site
-    root with no extra path needed. The actual host/username/password are in
-    `deploy/.ftp-credentials` (gitignored, not in this doc since it's committed to a
-    public repo).
-  - A leftover `default.php` placeholder file (pre-dating this project) still sits on
-    the server root. It's harmless (Apache serves `index.html` first) but was never
-    deleted — the user was asked and declined to have it auto-removed via an
-    unrequested destructive action; it's still there.
+- **Live site**: `https://deepsprings.businesswebexpress.com`, served by a Cloudflare
+  Worker named `deepsprings` (see `wrangler.jsonc`), attached as a **custom domain**
+  route. The `businesswebexpress.com` zone is already on Cloudflare nameservers
+  (`arturo.ns.cloudflare.com` / `rayne.ns.cloudflare.com`), so no DNS/nameserver changes
+  were needed — `wrangler deploy` handled the DNS record and TLS certificate
+  automatically when the custom domain route was first attached, transparently
+  replacing the old Hostinger-proxied DNS record for this subdomain.
+- **Deploy**: `npm run deploy` (= `npm run build && wrangler deploy`). Requires
+  `wrangler` to be authenticated (`npx wrangler whoami` / `npx wrangler login`) against
+  the `Info@businesswebexpress.com` Cloudflare account — that login is a local machine
+  credential (`C:\Users\Admin\AppData\Roaming\xdg.config\.wrangler\config\default.toml`),
+  not something stored in this repo.
+  - `wrangler.jsonc`: `assets.directory` points at `./out`, with
+    `not_found_handling: "404-page"` (serves the real `404.html` Next generated) and
+    `html_handling: "auto-trailing-slash"` (matches `next.config.ts`'s
+    `trailingSlash: true` — `/about` 307-redirects to `/about/`, which 200s).
+  - No bindings (KV/D1/R2/etc.) — this is a pure static-assets Worker, no Worker script.
+- **Hostinger is now retired for this project** (per explicit user decision this
+  session — "replace Hostinger entirely" over "keep both in parallel"). The old FTP
+  pipeline (`deploy/ftp-deploy.sh`, `deploy/.ftp-credentials`) is left in the repo,
+  clearly marked deprecated in the script's header comment, for reference/rollback only
+  — it still works against the Hostinger account if ever needed again, but is not run as
+  part of normal deploys anymore. The corresponding "always deploy to Hostinger"
+  standing preference in Claude's memory
+  (`C:\Users\Admin\.claude\projects\Z--Backup-Websites-DeepSprings\memory\feedback_always_deploy.md`)
+  was updated this session to point at `npm run deploy` (Cloudflare) instead.
+  - The Hostinger FTP-host gotcha from session 1 (must use the server's IP, not the
+    domain) and the leftover `default.php` placeholder on that server are now moot for
+    day-to-day work, but kept below for historical reference in case anyone needs to
+    fall back to Hostinger.
+    - `FTP_HOST` must be the server's actual IP (from hPanel → Hosting → Overview) —
+      NOT the domain name, since `businesswebexpress.com`'s DNS may point at a
+      different Hostinger account's server than the one this FTP account lives on.
+    - A leftover `default.php` placeholder file (pre-dating this project) was still
+      sitting on the Hostinger server root as of session 1 — harmless, never cleaned up.
+  - **HTTPS is no longer an open issue** — the Hostinger-side SSL/TLS handshake failure
+    that blocked the site for over a week (sessions 1–3) is irrelevant now that
+    Cloudflare terminates TLS. Do not spend time investigating it further unless the
+    project moves back to Hostinger.
 
 ## Tech stack
 
@@ -74,6 +89,46 @@ copied over, not invented).
 - `sharp` (already a transitive Next.js dependency) was used ad hoc from the command
   line this session to compress a 3MB customer-provided PNG down to a 336KB JPEG — not
   wired into any build step, just a one-off optimization.
+- `wrangler` (devDependency, `^4.114.0`) — Cloudflare's CLI, used for `npm run deploy`.
+
+## Session 4 (2026-07-23, fourth session)
+
+**Moved the live site from Hostinger to Cloudflare Workers**, at the user's explicit
+request (they wanted Cloudflare specifically, at the same hostname). No changes to the
+site's actual content/design this session — purely a hosting migration.
+
+1. Confirmed `businesswebexpress.com` was already on Cloudflare nameservers (so no
+   registrar/nameserver changes were needed) and that `wrangler` was already
+   authenticated locally against the right account (`Info@businesswebexpress.com`).
+2. Added `wrangler` as a devDependency and created `wrangler.jsonc` — a static-assets-only
+   Worker (`assets.directory: "./out"`, no Worker script, no bindings) with a
+   `custom_domain: true` route for `deepsprings.businesswebexpress.com`. Config values
+   (`not_found_handling`, `html_handling`) were pulled from current Cloudflare docs via
+   `WebFetch` rather than assumed, per the `wrangler` skill's retrieval-first guidance —
+   worth re-checking docs again if these fields ever look wrong, since this is a fast-
+   moving area of the platform.
+3. **Ran `wrangler deploy` and it worked on the first attempt**, including attaching the
+   custom domain — despite the docs warning that Cloudflare won't attach a custom domain
+   to "a hostname with an existing CNAME DNS record." The existing record was the
+   Hostinger-proxied one from sessions 1–3; `wrangler deploy` silently replaced it rather
+   than erroring. If a future session sees a custom-domain-attach failure for a
+   hostname with a pre-existing record, that's the known failure mode to investigate —
+   it just happened not to bite this time.
+4. **Verified thoroughly, not just "it loaded":** `curl` checks confirmed HTTPS actually
+   works now (a real fix, not a workaround, for the session 1–3 SSL problem), that
+   `/about` (no trailing slash) 307-redirects to `/about/` which 200s (matching
+   `trailingSlash: true`), and that a nonexistent path correctly 404s. Also loaded the
+   live site in the Browser pane and confirmed real rendered content with zero console
+   errors — not just a status code check.
+5. **Retired the Hostinger FTP pipeline** per the user's explicit choice ("replace
+   entirely" over "keep both in parallel"): added a `npm run deploy` script
+   (`next build/fix-static-images + wrangler deploy`), marked
+   `deploy/ftp-deploy.sh`'s header as deprecated (kept for rollback reference, not
+   deleted), and updated the "always deploy" standing preference in Claude's memory to
+   point at Cloudflare instead of Hostinger.
+6. Added `.wrangler/` and `.dev.vars*` to `.gitignore` (wrangler's local build
+   cache/secrets — not relevant to this static-assets-only setup today, but standard
+   hygiene if bindings/secrets are ever added later).
 
 ## Session 3 (2026-07-15, third session, same day as sessions 1–2)
 
@@ -212,22 +267,22 @@ committed and pushed).
 
 ## Known follow-ups
 
-- **HTTPS is currently broken on the live site** — this is Hostinger-side, not a code or
-  deploy issue. `curl`/`openssl s_client` against
-  `deepsprings.businesswebexpress.com:443` shows the TLS handshake itself failing with a
-  server-side `internal_error` alert (not a trust/cert-validity problem — the handshake
-  never completes), even though hPanel reportedly shows SSL as installed for the
-  subdomain, and even plain `http://` gets force-redirected to the broken `https://` by
-  Hostinger's edge/CDN layer, so there's no way to view the live site in a browser right
-  now. Needs the user to re-issue/reinstall the cert in hPanel or open a Hostinger
-  support ticket. The deploy itself is verified correct independently (see item 4 above)
-  — once SSL is fixed, the site should just work with no further changes needed.
+- ~~HTTPS broken on the live site~~ **Resolved in session 4** by moving hosting to
+  Cloudflare Workers — TLS is now handled automatically by Cloudflare, no code change
+  was needed. (Historical context, no longer actionable: this was a Hostinger-side TLS
+  handshake failure, `internal_error` alert, unrelated to this project's code or the
+  FTP deploy pipeline, which was verified correct independently at the time.)
 - The homepage's "Contact us" and "Join the list" forms are **static HTML only** — no
   submission handler, no email service wired up. They render but don't actually send
   anything anywhere yet.
 - Only 1 of the 7 gallery photos (the front door) is a real photo of this shop; the
   other 6 are carried over from the Lovable reference site and aren't guaranteed to
   depict the actual space.
-- The leftover `default.php` on the server root (pre-dating this project) was never
-  cleaned up — see the deploy section above.
+- The leftover `default.php` on the Hostinger server root (pre-dating this project) was
+  never cleaned up — now moot since the domain no longer points there, but the file
+  itself was never deleted if anyone goes looking.
 - No automated tests exist for this project.
+- The Cloudflare deploy (`npm run deploy`) depends on a **local `wrangler` OAuth
+  login** on this machine — it isn't portable to CI or another machine without running
+  `npx wrangler login` there first. Not an issue for solo/manual deploys, but worth
+  knowing if this project ever needs automated deploys.

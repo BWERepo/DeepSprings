@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+# DEPRECATED as of 2026-07-23: this project now deploys to Cloudflare Workers
+# (custom domain deepsprings.businesswebexpress.com) via `npm run deploy`
+# (wrangler), not Hostinger/FTP. This script is kept only for reference/
+# rollback — it still works against the Hostinger account if ever needed
+# again, but is not part of the normal deploy flow anymore.
+#
 # Uploads the static export in out/ (run `npm run build` first, with
 # next.config.ts's output:"export" this produces plain HTML/CSS/JS) to
 # Hostinger over FTPS. The FTP account's home directory is already scoped to
